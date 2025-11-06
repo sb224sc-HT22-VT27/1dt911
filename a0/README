@@ -1,0 +1,4 @@
+# How to run Assignment
+
+`cd a0`
+`go run .`
