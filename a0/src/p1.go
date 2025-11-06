@@ -8,7 +8,7 @@ import (
 func P1() {
 	counts := make([]int, 11)
 
-	for i := 0; i < 10_000; i++ {
+	for range 10_000 {
 		die1 := rand.Intn(6) + 1
 		die2 := rand.Intn(6) + 1
 		sum := die1 + die2
