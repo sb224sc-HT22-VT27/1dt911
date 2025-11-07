@@ -1,14 +1,52 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"math"
+	"regexp"
 	"slices"
 	"time"
 )
 
 const s string = "constant"
+
+type person struct {
+	name string
+	age  int
+}
+
+type rect struct {
+	width, height float64
+}
+
+type geometry interface {
+	area() float64
+	perim() float64
+}
+
+type circle struct {
+	radius float64
+}
+
+type base struct {
+	num int
+}
+
+type container struct {
+	base
+	str string
+}
+
+type List[T any] struct {
+	head, tail *element[T]
+}
+
+type element[T any] struct {
+	next *element[T]
+	val  T
+}
 
 func main() {
 	// Slide 3
@@ -304,6 +342,151 @@ func main() {
 	func() { fmt.Println("Anon!") }()
 
 	// Slide 58
+	val3 := 20
+	fanon := func() {
+		fmt.Println("val3 = ", val3)
+		val3 = 30
+	}
+	fanon()
+	fmt.Println("val3 = ", val3)
+
+	// Slide 59
+	add := func(a, b int) int {
+		return a + b
+	}
+	runme(add)
+
+	// Slide 61
+	nextInt := intSeq(0)
+	for range 3 {
+		fmt.Println(nextInt())
+	}
+
+	newInts := intSeq(10)
+	fmt.Println(newInts())
+
+	// Slide 62
+	fmt.Println(fact(8) == 40_320)
+
+	// Slide 63
+	ival := 1
+	fmt.Println("ival = ", ival)
+	setToZero(ival)
+	fmt.Println("ival = ", ival)
+
+	// Slide 64
+	iptr := 1
+	fmt.Println("ival = ", iptr)
+	setToZeroPtr(&iptr)
+	fmt.Println("ival = ", iptr)
+
+	// Slide 67
+	iptr = 1
+	fmt.Println("Value = ", iptr, ", Pointer = ", &iptr)
+
+	// Slide 68
+	const srune = "佛瑞德"
+	fmt.Println("Len: ", len(srune))
+
+	// Slide 69
+	for i := range len(srune) {
+		fmt.Printf("%x ", srune[i])
+	}
+	fmt.Println()
+
+	// Slide 70
+	for _, rv := range srune {
+		fmt.Printf("%#U\n", rv)
+	}
+	fmt.Println()
+
+	// Slide 71
+	_ = isT('A') != isT('T')
+
+	// Slide 72
+	p1 := person{"Alice", 10}
+	fmt.Println(p1)
+	p2 := person{name: "Bob"}
+	p2.age = 20
+	fmt.Println(p2)
+
+	// Slide 73
+	var p3 *person
+	p3 = newPersonPtr("Carol", 30)
+	fmt.Println(p3.name)
+
+	// Slide 75
+	dog := struct {
+		name   string
+		isGood bool
+	}{"Rex", true}
+
+	if dog.isGood {
+		fmt.Println(dog.name)
+	}
+
+	// Slide 77
+	r := rect{width: 10.0, height: 5.0}
+	fmt.Println("Area: ", r.area())
+	fmt.Println("Perimiter: ", r.perim())
+
+	// Slide 79
+	measure(&r)
+
+	// Slide 80
+	c0 := circle{5}
+	measure(c0)
+
+	// Slide 82
+	co := container{base: base{1}, str: "my string"}
+	fmt.Println(co.base.num)
+	fmt.Println(co.num)
+	fmt.Println(co.descrbe())
+
+	// Slide 83
+	var m0 = map[int]string{1: "2", 2: "4", 4: "8"}
+	fmt.Println("keys: ", MapKeys(m0))
+	_ = MapKeys(m0)
+
+	// Slide 87
+	lst := List[int]{}
+	lst.Push(10)
+	lst.Push(11)
+	lst.Push(12)
+	fmt.Println("List: ", lst.GetAll())
+
+	// Slide 89
+	if r, e := f1(42); e != nil {
+		fmt.Println("f1 failed: ", e)
+	} else {
+		fmt.Println("f1 worked: ", r)
+	}
+
+	// Slide 91
+	// if _, e := f1(42); e != nil {
+	// 	panic(e)
+	// }
+
+	// Slide 93
+	defer fmt.Println("Done")
+	myfunc()
+
+	// Slide 94
+	myfunc0()
+	fmt.Println("Survived function call")
+
+	// Slide 97
+	regex := regexp.MustCompile("p([a-z]+)ch")
+	fmt.Println(regex.MatchString("peach"))
+	fmt.Println(regex.FindAllString("peach punch pinch", 2))
+
+	// Slide 98
+	qs := regexp.MustCompile(`"(.+?)"`)
+	fmt.Println(qs.MatchString("peach"))
+	fmt.Println(qs.FindAllString("peach punch pinch", 2))
+
+	// Slide 99
+	fmt.Println(qs.FindStringSubmatch("A quoted string: \"dog\"")[1])
 }
 
 func plus(a int, b int) int {
@@ -328,4 +511,120 @@ func fsum(nums ...int) int {
 	}
 
 	return total
+}
+
+func runme(f func(int, int) int) {
+	fmt.Println(f(1, 2))
+}
+
+func intSeq(start int) func() int {
+	return func() int {
+		start++
+		return start
+	}
+}
+
+func fact(n int) int {
+	if n == 0 {
+		return 1
+	}
+	return n * fact(n-1)
+}
+
+func setToZero(ival int) {
+	ival = 0
+}
+
+func setToZeroPtr(iptr *int) {
+	*iptr = 0
+}
+
+func isT(r rune) bool {
+	return r == 'T'
+}
+
+func newPersonPtr(name string, age int) *person {
+	p := person{name: name, age: age}
+	return &p
+}
+
+func newPerson(name string, age int) person {
+	// Slide 74
+	return person{name: name, age: age}
+}
+
+func (r *rect) area() float64 {
+	return r.width * r.height
+}
+
+func (r rect) perim() float64 {
+	return 2*r.width + 2*r.height
+}
+
+func measure(g geometry) {
+	fmt.Println(g)
+	fmt.Println("Area: ", g.area())
+	fmt.Println("Perim: ", g.perim())
+}
+
+func (c circle) area() float64 {
+	return math.Pi * c.radius * c.radius
+}
+
+func (c circle) perim() float64 {
+	return 2 * math.Pi * c.radius
+}
+
+func (b base) descrbe() string {
+	return fmt.Sprintf("base with num = %v", b.num)
+}
+
+func MapKeys[K comparable, V any](m map[K]V) []K {
+	r := make([]K, 0, len(m))
+	for k := range m {
+		r = append(r, k)
+	}
+	return r
+}
+
+func (lst *List[T]) Push(v T) {
+	if lst.tail == nil {
+		lst.head = &element[T]{val: v}
+		lst.tail = lst.head
+	} else {
+		lst.tail.next = &element[T]{val: v}
+		lst.tail = lst.tail.next
+	}
+}
+
+func (lst *List[T]) GetAll() []T {
+	var elems []T
+	for e := lst.head; e != nil; e = e.next {
+		elems = append(elems, e.val)
+	}
+	return elems
+}
+
+func f1(arg int) (int, error) {
+	if arg == 42 {
+		return -1, errors.New("42 does not work")
+	}
+	return arg + 3, nil
+}
+
+func myfunc() {
+	defer fmt.Println("Exiting")
+	fmt.Println("Entering")
+	fmt.Println("Executing")
+}
+
+func myfunc0() int {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered error: ", r)
+		}
+	}()
+
+	a := 0
+	return 1 / a
 }
