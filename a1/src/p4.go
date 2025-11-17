@@ -1,0 +1,112 @@
+package src
+
+import (
+	"fmt"
+	"slices"
+	"sync"
+	"time"
+)
+
+type Heap struct {
+	data []int
+	sync.RWMutex
+}
+
+func NewHeap() *Heap {
+	return &Heap{data: make([]int, 0)}
+}
+
+func (h *Heap) Push(value int) {
+	h.Lock()
+	defer h.Unlock()
+	h.data = append(h.data, value)
+	h.heapifyUp(len(h.data) - 1)
+}
+
+func (h *Heap) Pop() (int, error) {
+	h.Lock()
+	defer h.Unlock()
+	if len(h.data) == 0 {
+		return 0, fmt.Errorf("Heap is empty")
+	}
+	min := h.data[0]
+	last := len(h.data) - 1
+	h.data[0] = h.data[last]
+	h.data = h.data[:last]
+	if len(h.data) > 1 {
+		h.heapifyDown(0)
+	}
+	return min, nil
+}
+
+func (h *Heap) heapifyUp(idx int) {
+	parent := (idx - 1) / 2
+	for idx > 0 && h.data[idx] < h.data[parent] {
+		h.data[idx], h.data[parent] = h.data[parent], h.data[idx]
+		idx = parent
+		parent = (idx - 1) / 2
+	}
+}
+
+func (h *Heap) heapifyDown(idx int) {
+	last := len(h.data) - 1
+	leftCh := 2*idx + 1
+	for leftCh <= last {
+		minCh := leftCh
+		rightCh := leftCh + 1
+		if rightCh <= last && h.data[rightCh] < h.data[leftCh] {
+			minCh = rightCh
+		}
+		if h.data[idx] <= h.data[minCh] {
+			break
+		}
+		h.data[idx], h.data[minCh] = h.data[minCh], h.data[idx]
+		idx = minCh
+		leftCh = 2*idx + 1
+	}
+}
+
+func (h *Heap) Contains(val int) bool {
+	h.RLock()
+	defer h.RUnlock()
+
+	return slices.Contains(h.data, val)
+}
+
+func P4() {
+	heap := NewHeap()
+	wg := sync.WaitGroup{}
+	numWorkers := 1024
+
+	for i := range numWorkers {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+
+			for j := range 3 {
+				heap.Push(id*10 + j)
+				fmt.Printf("Worker %d: heap pushed %d\n", id, id*10+j)
+			}
+
+			for range 2 {
+				value, err := heap.Pop()
+				if err != nil {
+					fmt.Printf("Worker %d: %v\n", id, err)
+					continue
+				}
+				fmt.Printf("Worker %d: heap popped %d\n", id, value)
+			}
+
+			for j := range 3 {
+				if heap.Contains(id*10 + j) {
+					fmt.Printf("Worker %d: heap contains %d\n", id, id*10+j)
+				} else {
+					fmt.Printf("Worker %d: heap does not contain %d\n", id, id*10+j)
+				}
+				time.Sleep(time.Second) // * To show it works
+			}
+		}(i)
+	}
+
+	wg.Wait()
+}

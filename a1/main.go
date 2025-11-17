@@ -1,7 +1,7 @@
 package main
 
 import (
-	"a0/src"
+	"a1/src"
 	"fmt"
 )
 
