@@ -36,7 +36,7 @@ func randWalk(gridSize int, numSteps int) Point {
 
 	dirs := []Point{{0, 1}, {1, 0}, {0, -1}, {-1, 0}}
 
-	for i := 0; i < numSteps; i++ {
+	for range numSteps {
 		step := dirs[rand.Intn(len(dirs))]
 
 		newPos := Point{curPos.X + step.X, curPos.Y + step.Y}
