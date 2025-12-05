@@ -11,7 +11,8 @@ import (
 const (
 	charset    = "abcdefghijklmnopqrstuvwxyz0123456789"
 	numWorkers = len(charset) // * Adjustable to be lower then len(charset) due to numWorkers being part of divsion with len(charset)
-	targetHash = "a74277500228f7b4cfa8694098443fc5"
+	//targetHash = "a74277500228f7b4cfa8694098443fc5"
+	targetHash = "4f1749bac331cf85ba1e5fa7533be35f"
 	length     = 6
 
 	// Test case
