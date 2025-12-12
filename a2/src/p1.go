@@ -20,22 +20,21 @@ const (
 type Node struct {
 	key  int
 	next *Node
-	mu   sync.Mutex // For fine-grained locking
+	mu   sync.Mutex // fine-grained
 }
 
 // LinkedList represents a sorted linked list
 type LinkedList struct {
 	head *Node
-	mu   sync.Mutex // For coarse-grained locking
+	mu   sync.Mutex // coarse-grained
 }
 
 // NewLinkedList creates a new empty linked list with sentinel nodes
 func NewLinkedList() *LinkedList {
-	// Head sentinel with minimum value
 	head := &Node{key: minInt}
-	// Tail sentinel with maximum value
 	tail := &Node{key: maxInt}
 	head.next = tail
+
 	return &LinkedList{head: head}
 }
 
@@ -144,21 +143,21 @@ func (ll *FineGrainedList) Add(key int) bool {
 	pred := ll.head
 	curr := pred.next
 	curr.mu.Lock()
-	
+
 	for curr.key < key {
 		pred.mu.Unlock()
 		pred = curr
 		curr = curr.next
 		curr.mu.Lock()
 	}
-	
+
 	defer pred.mu.Unlock()
 	defer curr.mu.Unlock()
-	
+
 	if curr.key == key {
 		return false
 	}
-	
+
 	node := &Node{key: key, next: curr}
 	pred.next = node
 	return true
@@ -169,21 +168,21 @@ func (ll *FineGrainedList) Remove(key int) bool {
 	pred := ll.head
 	curr := pred.next
 	curr.mu.Lock()
-	
+
 	for curr.key < key {
 		pred.mu.Unlock()
 		pred = curr
 		curr = curr.next
 		curr.mu.Lock()
 	}
-	
+
 	defer pred.mu.Unlock()
 	defer curr.mu.Unlock()
-	
+
 	if curr.key != key {
 		return false
 	}
-	
+
 	pred.next = curr.next
 	return true
 }
@@ -193,17 +192,17 @@ func (ll *FineGrainedList) Contains(key int) bool {
 	pred := ll.head
 	curr := pred.next
 	curr.mu.Lock()
-	
+
 	for curr.key < key {
 		pred.mu.Unlock()
 		pred = curr
 		curr = curr.next
 		curr.mu.Lock()
 	}
-	
+
 	pred.mu.Unlock()
 	curr.mu.Unlock()
-	
+
 	return curr.key == key
 }
 
@@ -213,7 +212,7 @@ func (ll *FineGrainedList) Count() int {
 	curr := ll.head.next
 	curr.mu.Lock()
 	ll.head.mu.Unlock()
-	
+
 	for curr != nil && curr.key != maxInt {
 		count++
 		next := curr.next
@@ -223,18 +222,18 @@ func (ll *FineGrainedList) Count() int {
 		curr.mu.Unlock()
 		curr = next
 	}
-	
+
 	if curr != nil {
 		curr.mu.Unlock()
 	}
-	
+
 	return count
 }
 
 // OptimisticList implements optimistic locking with atomic operations
 type OptimisticList struct {
-	head *Node
-	mu   sync.Mutex // Optional: can be disabled for testing
+	head       *Node
+	mu         sync.Mutex
 	useLocking bool
 }
 
@@ -253,34 +252,32 @@ func (ll *OptimisticList) Add(key int) bool {
 	for {
 		pred := ll.head
 		curr := pred.next
-		
+
 		for curr.key < key {
 			pred = curr
 			curr = curr.next
 		}
-		
+
 		if ll.useLocking {
 			pred.mu.Lock()
 			curr.mu.Lock()
-			
+
 			if ll.validate(pred, curr) {
 				defer pred.mu.Unlock()
 				defer curr.mu.Unlock()
-				
+
 				if curr.key == key {
 					return false
 				}
-				
+
 				node := &Node{key: key, next: curr}
 				pred.next = node
 				return true
 			}
-			
+
 			pred.mu.Unlock()
 			curr.mu.Unlock()
 		} else {
-			// WARNING: Without locking, this has intentional race conditions for demonstration
-			// Multiple goroutines can simultaneously modify pred.next causing data corruption
 			if curr.key == key {
 				return false
 			}
@@ -294,24 +291,24 @@ func (ll *OptimisticList) Add(key int) bool {
 func (ll *OptimisticList) Contains(key int) bool {
 	pred := ll.head
 	curr := pred.next
-	
+
 	for curr.key < key {
 		pred = curr
 		curr = curr.next
 	}
-	
+
 	if ll.useLocking {
 		pred.mu.Lock()
 		curr.mu.Lock()
 		defer pred.mu.Unlock()
 		defer curr.mu.Unlock()
-		
+
 		if ll.validate(pred, curr) {
 			return curr.key == key
 		}
 		return false
 	}
-	
+
 	return curr.key == key
 }
 
@@ -325,58 +322,56 @@ func (ll *OptimisticList) Count() int {
 	return count
 }
 
+// ====================
 // Experiment functions
+// ====================
 
 func runSequentialExperiment() {
 	fmt.Println("\n--- A.1: Sequential Linked List ---")
-	
+
 	ll := NewLinkedList()
 	numNodes := 5000
-	
-	// Single goroutine
+
 	start := time.Now()
-	for i := 0; i < numNodes; i++ {
+	for range numNodes {
 		ll.Add(rand.Intn(1000000))
 	}
 	elapsed := time.Since(start)
-	
+
 	fmt.Printf("Single goroutine: Added %d nodes in %v\n", ll.Count(), elapsed)
 	fmt.Printf("Strictly increasing: %v\n", ll.StrictlyIncreasing())
-	
-	// Multiple goroutines (will have race conditions)
+
 	ll2 := NewLinkedList()
 	var wg sync.WaitGroup
 	numGoroutines := 4
 	nodesPerGoroutine := numNodes / numGoroutines
-	
+
 	start = time.Now()
-	for g := 0; g < numGoroutines; g++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for i := 0; i < nodesPerGoroutine; i++ {
+	for range numGoroutines {
+		wg.Go(func() {
+			for range nodesPerGoroutine {
 				ll2.Add(rand.Intn(1000000))
 			}
-		}()
+		})
 	}
 	wg.Wait()
 	elapsed = time.Since(start)
-	
-	fmt.Printf("Multiple goroutines (%d): Added %d nodes in %v (may have race conditions)\n", 
+
+	fmt.Printf("Multiple goroutines (%d): Added %d nodes in %v (may have race conditions)\n",
 		numGoroutines, ll2.Count(), elapsed)
+	//fmt.Printf("Strictly increasing: %v\n", ll.StrictlyIncreasing())
+
 }
 
 func runCoarseGrainedExperiment() {
 	fmt.Println("\n--- A.2.1 & A.2.2: Coarse-Grained Locking ---")
-	
+
 	numCores := runtime.NumCPU()
-	numNodes := 10000 // Reduced for faster testing
+	numNodes := 10000
 	maxValue := 1000000
-	
+
 	fmt.Printf("Testing with %d nodes, %d cores\n", numNodes, numCores)
-	
-	// Random values experiment
-	fmt.Println("\nRandom values:")
+
 	goroutineCounts := []int{1, 2, 4, 8, 16, 32}
 	if numCores > 1 {
 		maxG := 32 * numCores
@@ -384,11 +379,12 @@ func runCoarseGrainedExperiment() {
 			goroutineCounts = append(goroutineCounts, 64, 128)
 		}
 	}
+
+	fmt.Println("\nRandom values:")
 	for _, g := range goroutineCounts {
 		runCoarseTest(g, numNodes, maxValue, true)
 	}
-	
-	// Sequential values experiment
+
 	fmt.Println("\nSequential values:")
 	for _, g := range goroutineCounts {
 		runCoarseTest(g, numNodes, maxValue, false)
@@ -399,13 +395,13 @@ func runCoarseTest(numGoroutines, numNodes, maxValue int, random bool) {
 	ll := NewCoarseGrainedList()
 	var wg sync.WaitGroup
 	nodesPerGoroutine := numNodes / numGoroutines
-	
+
 	start := time.Now()
-	for g := 0; g < numGoroutines; g++ {
+	for g := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			for i := 0; i < nodesPerGoroutine; i++ {
+			for i := range nodesPerGoroutine {
 				var key int
 				if random {
 					key = rand.Intn(maxValue)
@@ -418,18 +414,18 @@ func runCoarseTest(numGoroutines, numNodes, maxValue int, random bool) {
 	}
 	wg.Wait()
 	elapsed := time.Since(start)
-	
-	fmt.Printf("Goroutines: %3d, Time: %v, Nodes: %d\n", 
+
+	fmt.Printf("Goroutines: %3d, Time: %v, Nodes: %d\n",
 		numGoroutines, elapsed, ll.Count())
 }
 
 func runFineGrainedExperiment() {
 	fmt.Println("\n--- A.2.3: Fine-Grained Locking ---")
-	
+
 	numCores := runtime.NumCPU()
-	numNodes := 10000 // Reduced for faster testing
+	numNodes := 10000
 	maxValue := 1000000
-	
+
 	goroutineCounts := []int{1, 2, 4, 8, 16, 32}
 	if numCores > 1 {
 		maxG := 32 * numCores
@@ -437,14 +433,12 @@ func runFineGrainedExperiment() {
 			goroutineCounts = append(goroutineCounts, 64, 128)
 		}
 	}
-	
-	// Random values
+
 	fmt.Println("\nRandom values:")
 	for _, g := range goroutineCounts {
 		runFineTest(g, numNodes, maxValue, true)
 	}
-	
-	// Sequential values
+
 	fmt.Println("\nSequential values:")
 	for _, g := range goroutineCounts {
 		runFineTest(g, numNodes, maxValue, false)
@@ -455,13 +449,13 @@ func runFineTest(numGoroutines, numNodes, maxValue int, random bool) {
 	ll := NewFineGrainedList()
 	var wg sync.WaitGroup
 	nodesPerGoroutine := numNodes / numGoroutines
-	
+
 	start := time.Now()
-	for g := 0; g < numGoroutines; g++ {
+	for g := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			for i := 0; i < nodesPerGoroutine; i++ {
+			for i := range nodesPerGoroutine {
 				var key int
 				if random {
 					key = rand.Intn(maxValue)
@@ -474,18 +468,18 @@ func runFineTest(numGoroutines, numNodes, maxValue int, random bool) {
 	}
 	wg.Wait()
 	elapsed := time.Since(start)
-	
-	fmt.Printf("Goroutines: %3d, Time: %v, Nodes: %d\n", 
+
+	fmt.Printf("Goroutines: %3d, Time: %v, Nodes: %d\n",
 		numGoroutines, elapsed, ll.Count())
 }
 
 func runOptimisticExperiment() {
 	fmt.Println("\n--- A.3: Optimistic Locking ---")
-	
+
 	numCores := runtime.NumCPU()
-	numNodes := 10000 // Reduced for faster testing
+	numNodes := 10000
 	maxValue := 1000000
-	
+
 	goroutineCounts := []int{1, 2, 4, 8, 16, 32}
 	if numCores > 1 {
 		maxG := 32 * numCores
@@ -493,19 +487,17 @@ func runOptimisticExperiment() {
 			goroutineCounts = append(goroutineCounts, 64, 128)
 		}
 	}
-	
-	// With locking
+
 	fmt.Println("\nWith locking enabled - Random values:")
 	for _, g := range goroutineCounts {
 		runOptimisticTest(g, numNodes, maxValue, true, true)
 	}
-	
+
 	fmt.Println("\nWith locking enabled - Sequential values:")
 	for _, g := range goroutineCounts {
 		runOptimisticTest(g, numNodes, maxValue, false, true)
 	}
-	
-	// Without locking (demonstration)
+
 	fmt.Println("\nWith locking disabled - Random values (demonstration with race conditions):")
 	runOptimisticTest(4, 1000, maxValue, true, false)
 }
@@ -514,13 +506,13 @@ func runOptimisticTest(numGoroutines, numNodes, maxValue int, random, useLocking
 	ll := NewOptimisticList(useLocking)
 	var wg sync.WaitGroup
 	nodesPerGoroutine := numNodes / numGoroutines
-	
+
 	start := time.Now()
-	for g := 0; g < numGoroutines; g++ {
+	for g := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			for i := 0; i < nodesPerGoroutine; i++ {
+			for i := range nodesPerGoroutine {
 				var key int
 				if random {
 					key = rand.Intn(maxValue)
@@ -533,21 +525,19 @@ func runOptimisticTest(numGoroutines, numNodes, maxValue int, random, useLocking
 	}
 	wg.Wait()
 	elapsed := time.Since(start)
-	
+
 	lockStatus := "enabled"
 	if !useLocking {
 		lockStatus = "disabled"
 	}
-	fmt.Printf("Goroutines: %3d, Time: %v, Nodes: %d (locking: %s)\n", 
+	fmt.Printf("Goroutines: %3d, Time: %v, Nodes: %d (locking: %s)\n",
 		numGoroutines, elapsed, ll.Count(), lockStatus)
 }
 
 func P1() {
-	rand.Seed(time.Now().UnixNano())
-	
 	fmt.Println("Part A: Locking Strategies for Linked Lists")
 	fmt.Printf("Machine: %d cores\n", runtime.NumCPU())
-	
+
 	runSequentialExperiment()
 	runCoarseGrainedExperiment()
 	runFineGrainedExperiment()
