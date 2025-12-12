@@ -8,6 +8,11 @@
 *.so
 *.dylib
 
+# Assignment binaries
+a0/a0
+a1/a1
+a2/a2
+
 # Test binary, built with `go test -c`
 *.test
 
