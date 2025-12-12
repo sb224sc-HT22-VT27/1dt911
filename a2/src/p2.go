@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+const (
+	// concurrentThreshold is the minimum array size for concurrent sorting
+	concurrentThreshold = 10000
+	// maxDepth is the maximum recursion depth for concurrent sorting
+	maxDepth = 4
+)
+
 // serialQuicksort is a standard quicksort implementation
 func serialQuicksort(arr []int) {
 	if len(arr) <= 1 {
@@ -39,24 +46,26 @@ func serialQuicksort(arr []int) {
 	}
 }
 
-// partition partitions the array around a pivot
-func partition(arr []int) ([]int, int, []int) {
+// partition partitions the array around a pivot, returning left, middle (equal), and right partitions
+func partition(arr []int) ([]int, []int, []int) {
 	if len(arr) == 0 {
-		return nil, 0, nil
+		return nil, nil, nil
 	}
 	
 	pivot := arr[len(arr)/2]
-	var left, right []int
+	var left, middle, right []int
 	
 	for _, v := range arr {
 		if v < pivot {
 			left = append(left, v)
-		} else if v > pivot {
+		} else if v == pivot {
+			middle = append(middle, v)
+		} else {
 			right = append(right, v)
 		}
 	}
 	
-	return left, pivot, right
+	return left, middle, right
 }
 
 // concurrentQuicksort implements quicksort using goroutines and channels
@@ -66,12 +75,12 @@ func concurrentQuicksort(arr []int, depth int) []int {
 	}
 	
 	// Use serial sort for small arrays or deep recursion to avoid goroutine overhead
-	if len(arr) < 10000 || depth > 4 {
+	if len(arr) < concurrentThreshold || depth > maxDepth {
 		serialQuicksort(arr)
 		return arr
 	}
 	
-	left, pivot, right := partition(arr)
+	left, middle, right := partition(arr)
 	
 	// Use channels to synchronize goroutines
 	leftChan := make(chan []int, 1)
@@ -91,10 +100,10 @@ func concurrentQuicksort(arr []int, depth int) []int {
 	sortedLeft := <-leftChan
 	sortedRight := <-rightChan
 	
-	// Combine results
+	// Combine results: left + middle (pivot elements) + right
 	result := make([]int, 0, len(arr))
 	result = append(result, sortedLeft...)
-	result = append(result, pivot)
+	result = append(result, middle...)
 	result = append(result, sortedRight...)
 	
 	return result

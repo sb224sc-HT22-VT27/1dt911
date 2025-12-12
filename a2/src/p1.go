@@ -2,12 +2,18 @@ package src
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
+)
+
+const (
+	minInt = math.MinInt
+	maxInt = math.MaxInt
 )
 
 // Node represents a node in the linked list
@@ -26,9 +32,9 @@ type LinkedList struct {
 // NewLinkedList creates a new empty linked list with sentinel nodes
 func NewLinkedList() *LinkedList {
 	// Head sentinel with minimum value
-	head := &Node{key: -1}
+	head := &Node{key: minInt}
 	// Tail sentinel with maximum value
-	tail := &Node{key: int(^uint(0) >> 1)} // Max int
+	tail := &Node{key: maxInt}
 	head.next = tail
 	return &LinkedList{head: head}
 }
@@ -75,7 +81,6 @@ func (ll *LinkedList) Contains(key int) bool {
 func (ll *LinkedList) Count() int {
 	count := 0
 	curr := ll.head.next
-	maxInt := int(^uint(0) >> 1)
 	for curr != nil && curr.key != maxInt {
 		count++
 		curr = curr.next
@@ -86,7 +91,6 @@ func (ll *LinkedList) Count() int {
 // StrictlyIncreasing checks if the list is strictly increasing
 func (ll *LinkedList) StrictlyIncreasing() bool {
 	curr := ll.head.next
-	maxInt := int(^uint(0) >> 1)
 	for curr != nil && curr.next != nil && curr.key != maxInt {
 		if curr.key >= curr.next.key {
 			return false
@@ -129,8 +133,8 @@ type FineGrainedList struct {
 }
 
 func NewFineGrainedList() *FineGrainedList {
-	head := &Node{key: -1}
-	tail := &Node{key: int(^uint(0) >> 1)}
+	head := &Node{key: minInt}
+	tail := &Node{key: maxInt}
 	head.next = tail
 	return &FineGrainedList{head: head}
 }
@@ -210,7 +214,6 @@ func (ll *FineGrainedList) Count() int {
 	curr.mu.Lock()
 	ll.head.mu.Unlock()
 	
-	maxInt := int(^uint(0) >> 1)
 	for curr != nil && curr.key != maxInt {
 		count++
 		next := curr.next
@@ -236,8 +239,8 @@ type OptimisticList struct {
 }
 
 func NewOptimisticList(useLocking bool) *OptimisticList {
-	head := &Node{key: -1}
-	tail := &Node{key: int(^uint(0) >> 1)}
+	head := &Node{key: minInt}
+	tail := &Node{key: maxInt}
 	head.next = tail
 	return &OptimisticList{head: head, useLocking: useLocking}
 }
@@ -276,6 +279,8 @@ func (ll *OptimisticList) Add(key int) bool {
 			pred.mu.Unlock()
 			curr.mu.Unlock()
 		} else {
+			// WARNING: Without locking, this has intentional race conditions for demonstration
+			// Multiple goroutines can simultaneously modify pred.next causing data corruption
 			if curr.key == key {
 				return false
 			}
@@ -313,7 +318,6 @@ func (ll *OptimisticList) Contains(key int) bool {
 func (ll *OptimisticList) Count() int {
 	count := 0
 	curr := ll.head.next
-	maxInt := int(^uint(0) >> 1)
 	for curr != nil && curr.key != maxInt {
 		count++
 		curr = curr.next
