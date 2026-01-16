@@ -1,11 +1,11 @@
 sk224qw:
-    problem 1: Fel implementation är coarse-grain locking inte fine-grained.
+    problem 1: Ok, din antal variable är utsatt för möjligt race conditions.
 
     problem 2: Bra.
 
-    grade: F
+    grade: D
 
-    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
+    overall: Bra jobbat.
 
 iw222jj:
     problem 1: Fel implementation är coarse-grain locking inte fine-grained.
@@ -28,25 +28,25 @@ jl226np:
     overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
 
 am225mc:
-    problem 1: Fel implementation är coarse-grain locking inte fine-grained.
+    problem 1: Bra.
 
     problem 2: Bra.
 
-    grade: F
+    grade: C
 
-    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
+    overall: Bro jobbat.
 
 aj225mw:
     problem 1: Bra.
 
     problem 2: Bra.
 
-    grade: C (fråga daniel om begränsing på betyg efter misslyckad första inlämning)
+    grade: C
 
     overall: Bra jobbat.
 
 sa226ay:
-    problem 1: Fel implementation är coarse-grain locking inte fine-grained.
+    problem 1: Fel implementation är coarse-grain locking inte fine-grained. Samma problem som föregående inlämnings försök.
 
     problem 2: Bra.
 
@@ -55,6 +55,15 @@ sa226ay:
     overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
 
 er223qd:
+    problem 1: Bra.
+
+    problem 2: Bra.
+
+    grade: C
+
+    overall: Bra jobbat.
+
+ac223rr:
     problem 1: Fel implementation är coarse-grain locking inte fine-grained.
 
     problem 2: Bra.
@@ -62,3 +71,12 @@ er223qd:
     grade: F
 
     overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
+
+wa222hb:
+    problem 1: Bra.
+
+    problem 2: Bra.
+
+    grade: C
+
+    overall: Bra jobbat.
