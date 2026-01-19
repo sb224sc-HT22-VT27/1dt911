@@ -8,15 +8,15 @@ sk224qw:
     overall: Bra jobbat.
 
 iw222jj:
-    problem 1: Fel implementation är coarse-grain locking inte fine-grained.
+    problem 1: Bra.
 
     problem 2: Bra.
 
     problem 3: Bra.
 
-    grade: F
+    grade: B
 
-    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
+    overall: Bra jobbat.
 
 jl226np:
     problem 1: Fel implementation är coarse-grain locking inte fine-grained.
