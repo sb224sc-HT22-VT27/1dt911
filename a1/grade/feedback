@@ -80,3 +80,12 @@ wa222hb:
     grade: C
 
     overall: Bra jobbat.
+
+ak225jj:
+    problem 1: Fel implementation är coarse-grain locking inte fine-grained.
+
+    problem 2: Bra.
+
+    grade: F
+
+    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kontakta mig på slack (sb224sc).
