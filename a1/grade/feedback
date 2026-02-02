@@ -19,13 +19,13 @@ iw222jj:
     overall: Bra jobbat.
 
 jl226np:
-    problem 1: Fel implementation är coarse-grain locking inte fine-grained.
+    problem 1: Bra.
 
     problem 2: Bra.
 
-    grade: F
+    grade: C
 
-    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
+    overall: Bra jobbat.
 
 am225mc:
     problem 1: Bra.
@@ -46,13 +46,13 @@ aj225mw:
     overall: Bra jobbat.
 
 sa226ay:
-    problem 1: Fel implementation är coarse-grain locking inte fine-grained. Samma problem som föregående inlämnings försök.
+    problem 1: Bra.
 
     problem 2: Bra.
 
-    grade: F
+    grade: C
 
-    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
+    overall: Bra jobbat.
 
 er223qd:
     problem 1: Bra.
@@ -64,13 +64,13 @@ er223qd:
     overall: Bra jobbat.
 
 ac223rr:
-    problem 1: Fel implementation är coarse-grain locking inte fine-grained.
+    problem 1: Bra.
 
     problem 2: Bra.
 
-    grade: F
+    grade: C
 
-    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kom till ett labbtillfälle eller kontakta mig på slack (sb224sc).
+    overall: Bra jobbat.
 
 wa222hb:
     problem 1: Bra.
@@ -82,10 +82,19 @@ wa222hb:
     overall: Bra jobbat.
 
 ak225jj:
+    problem 1: Bra.
+
+    problem 2: Bra.
+
+    grade: C
+
+    overall: Bra jobbat.
+
+sa225jf:
     problem 1: Fel implementation är coarse-grain locking inte fine-grained.
 
     problem 2: Bra.
 
     grade: F
 
-    overall: Fixa problem 1 till att vara fine-grained. Om du vill diskutera feedbacken kontakta mig på slack (sb224sc).
+    overall: Kolla på föreläsning om hur fine-grained locking fungerar.
